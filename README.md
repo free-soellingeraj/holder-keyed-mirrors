@@ -13,13 +13,13 @@ Every format is generated from the Markdown in this repository. If two formats d
 - **This repository,** <https://github.com/free-soellingeraj/holder-keyed-mirrors>. Start with [architecture.md](architecture.md). The diagrams are Mermaid and render on the page.
 - **A shared online document, open for comments:** {{GOOGLE_DOC_URL}}
 - **A Word file:** [build/holder-keyed-mirrors.docx](build/holder-keyed-mirrors.docx), built from the Markdown by [build.sh](build.sh).
-- **An assistant-readable document, to read and question with an AI assistant:** {{CLAUDE_DOC_URL}}
+- **An assistant-readable document, to read and question with an AI assistant:** <https://claude.ai/artifact/CnGtAxjdCMKN6cKZ15m4hN>
 
 ## How to contribute
 
 - **[Issues](https://github.com/free-soellingeraj/holder-keyed-mirrors/issues) and [pull requests](https://github.com/free-soellingeraj/holder-keyed-mirrors/pulls)** on this repository. [CONTRIBUTING.md](CONTRIBUTING.md) explains the rules and how to build.
 - **Comments** in either online document.
-- **Mark up the .docx** with comments or tracked changes, and send it back to {{CONTACT}}.
+- **Mark up the .docx** with comments or tracked changes, and send it back in [a new GitHub issue](https://github.com/free-soellingeraj/holder-keyed-mirrors/issues/new) on this repository, with the file attached.
 - **Anonymous comments, and sign-up for updates,** through the feedback form: {{FORM_URL}}. You don't need to sign in, and an email address is optional.
 
 ## Using your AI assistant to propose a change
@@ -27,7 +27,7 @@ Every format is generated from the Markdown in this repository. If two formats d
 1. Clone or download <https://github.com/free-soellingeraj/holder-keyed-mirrors>, and open it with your AI assistant.
 2. Tell it: "Read AGENTS.md and follow it. Then propose this change to architecture.md: *your change*. Keep it to one topic."
 3. Ask it to run `./build.sh` and to fix any diagram that fails to render.
-4. Read the change yourself before you send it. Then open a pull request, or send the changed file to {{CONTACT}}.
+4. Read the change yourself before you send it. Then open a pull request, or send it in [a new GitHub issue](https://github.com/free-soellingeraj/holder-keyed-mirrors/issues/new) on this repository, with the file attached.
 
 [AGENTS.md](AGENTS.md) holds the rules your assistant needs: stay vendor-neutral, describe the design only, keep diagrams in Mermaid, and cite standards by RFC number.
 
