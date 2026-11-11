@@ -1,0 +1,42 @@
+name: build
+
+# Runs the same ./build.sh as a contributor would, and attaches the .docx to
+# the run so anyone can download it without installing the tools.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Mermaid CLI
+        run: npm install --global @mermaid-js/mermaid-cli@11.12.0
+
+      - name: Install pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes pandoc
+          pandoc --version | head -n 1
+
+      - name: Build
+        run: ./build.sh
+
+      - name: Upload the .docx
+        uses: actions/upload-artifact@v4
+        with:
+          name: holder-keyed-mirrors-docx
+          path: build/holder-keyed-mirrors.docx
+          if-no-files-found: error
