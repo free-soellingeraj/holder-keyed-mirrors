@@ -11,7 +11,7 @@ This design keeps each account's data under one key that the person's own comput
 Every format is generated from the Markdown in this repository. If two formats disagree, the Markdown is right.
 
 - **This repository,** <https://github.com/free-soellingeraj/holder-keyed-mirrors>. Start with [architecture.md](architecture.md). The diagrams are Mermaid and render on the page.
-- **A shared online document, open for comments:** {{GOOGLE_DOC_URL}}
+- **A shared online document, open for comments:** https://docs.google.com/document/d/14u9LWF9midBXf4wlqz__8Fj-2vwGn7pr9OF4lNAfdng/edit
 - **A Word file:** [build/holder-keyed-mirrors.docx](build/holder-keyed-mirrors.docx), built from the Markdown by [build.sh](build.sh).
 - **An assistant-readable document, to read and question with an AI assistant:** <https://claude.ai/artifact/CnGtAxjdCMKN6cKZ15m4hN>
 
