@@ -62,8 +62,8 @@ Every key and credential in the design is listed here. Only two are lasting keyp
 | Device token | Bearer token: lookup part plus the device's unlock secret | The companion app | The OS keystore, hardware-backed where the computer has one. The server keeps the hash. | Until the device signs out or is removed |
 | Session cookie | Bearer token: lookup part plus the session's unlock secret, in an HttpOnly, Secure, SameSite cookie (RFC 6265) | The person's browser | The browser's cookie store. The server keeps the hash. | Until sign-out, removal of the device that opened it, or a fixed maximum age |
 | Connect code | One-time code: lookup part plus a one-time secret | The companion app, then the browser's URL fragment | The server keeps the hash and a one-time wrap of the account key | 60 seconds, single use |
-| Authorization code | OAuth 2.1 authorization code bound to a Proof Key for Code Exchange (PKCE) challenge (RFC 7636), with a one-time secret | Passes through the browser to the AI assistant | The server keeps the hash and a one-time wrap of the account key | A few minutes, single use |
-| Access token | OAuth 2.1 bearer access token (RFC 6750): lookup part plus the assistant's unlock secret | The AI assistant (any MCP client) | The client's own storage. The server keeps the hash. | Short. It expires and is renewed with the refresh token. |
+| Authorization code | OAuth 2.1 (draft) authorization code bound to a Proof Key for Code Exchange (PKCE) challenge (RFC 7636), with a one-time secret | Passes through the browser to the AI assistant | The server keeps the hash and a one-time wrap of the account key | A few minutes, single use |
+| Access token | OAuth 2.1 bearer access token (RFC 6750): lookup part plus the assistant's unlock secret, bound to this server by a resource indicator (RFC 8707) | The AI assistant (any MCP client) | The client's own storage. The server keeps the hash. | Short. It expires and is renewed with the refresh token. |
 | Refresh token | OAuth 2.1 refresh token: lookup part plus the assistant's unlock secret | The AI assistant | The client's own storage. The server keeps the hash. | Single use. Each use returns a new one. |
 | Personal access token | Bearer token: lookup part plus its own unlock secret, with scopes and an expiry | A REST client or script the person runs | Wherever the person keeps it. The server keeps the hash. | Until its expiry, or until the person deletes it |
 | Device approval code | A short code computed from a new device's one-time public key | Shown on the new device and on the approval screen | Not stored. Either side recomputes it from the public key. | Until the request is approved, denied or times out |
@@ -208,22 +208,22 @@ The session's locked copy is created at redeem time, not when the code is minted
 
 ### 5.3 Connect an AI assistant
 
-Any MCP client can connect, through OAuth 2.1 with PKCE (RFC 7636) and without registering in advance. The client identifies itself the way the MCP authorization specification asks: with a client ID metadata document, which the specification prefers, or with dynamic client registration (RFC 7591), which it keeps for backward compatibility. Either way, the server compares the redirect address with the registered one exactly, character for character. Because any client can register, the consent page is the main gate: it is the one point where a person decides that a new holder should exist. So every new connection sends a notice to the account's email address, naming the client and saying how to remove it.
+Any MCP client can connect, following the MCP authorization specification (revision 2026-07-28) and OAuth 2.1 (draft). The client is identified by a client ID metadata document: its client ID is an HTTPS address, and the server fetches the document there to learn the client's name and its redirect addresses. Dynamic client registration (RFC 7591) is accepted only as a fallback, for a client that cannot publish such a document. Either way, the redirect address in each request must match a registered one exactly, character for character, and must be an HTTPS address or a local address on the person's own computer. The client must use PKCE with the S256 method (RFC 7636), and must name this server as the token's audience with a resource indicator (RFC 8707), so that a token issued here is refused anywhere else. Because any client can connect without being known in advance, the consent page is the main gate: it is the one point where a person decides that a new holder should exist. So every new connection sends a notice to the account's email address, naming the client and saying how to remove it.
 
 The assistant's locked copy is made at the token exchange, not at consent, for the same reason as in 5.2. Until then, the authorization code is a one-time holder of its own.
 
 ```mermaid
 sequenceDiagram
     accTitle: Connect an AI assistant
-    accDescr: An MCP client registers and sends the person to the consent page. On approval the server mints a one-time authorization code with its own wrap of the account key. At the token exchange the server checks PKCE, makes the assistant's unlock secret and locked copy, notifies the account email and returns tokens carrying the secret. Later a refresh spends the refresh token and re-wraps the copy under a new secret.
+    accDescr: An MCP client identifies itself with a client ID metadata document and sends the person to the consent page. On approval the server mints a one-time authorization code with its own wrap of the account key. At the token exchange the server checks PKCE, makes the assistant's unlock secret and locked copy, notifies the account email and returns tokens carrying the secret. Later a refresh spends the refresh token and re-wraps the copy under a new secret.
     autonumber
     participant U as You in the browser
     participant A as AI assistant (MCP client)
     participant S as Server
     participant DB as Database
     participant M as Account email
-    A->>S: identify itself, by a client ID metadata<br/>document or dynamic registration (RFC 7591)
-    A->>U: send you to the authorization endpoint<br/>with a PKCE challenge (S256)
+    A->>S: identify itself by a client ID metadata<br/>document (RFC 7591 registration as a fallback)
+    A->>U: send you to the authorization endpoint<br/>with a PKCE challenge (S256)<br/>and a resource indicator (RFC 8707)
     U->>S: approve on the consent page<br/>(session cookie with its unlock secret)
     S->>S: unwrap the account key, mint a one-time<br/>authorization code, wrap the key under it
     S->>DB: store the code hash and its one-time wrap<br/>(a few minutes, single use)
@@ -242,7 +242,7 @@ sequenceDiagram
 **On screen**
 
 - **Step 1, the assistant's connector settings.** The person adds the service as a connector, by its address, and presses Connect. Each assistant words this differently.
-- **Step 3, the service's consent page.** It shows which client is asking, with its registered name and redirect address, what it may read, that access is read-only, and that it gets its own key the person can remove at any time in settings. The person can name the connection, then clicks Approve, or Cancel.
+- **Step 3, the service's consent page.** It shows which client is asking, with its name, its client ID address and its redirect address, what it may read, that access is read-only, and that it gets its own key the person can remove at any time in settings. The person can name the connection, then clicks Approve, or Cancel.
 - **Step 10, the person's email.** A message says a new assistant was connected, names the client and the time, and links to the settings page that removes it.
 
 **Refresh.** The refresh token also carries the holder's unlock secret, so a refresh can re-wrap the copy under a new secret. Access tokens expire. Refresh tokens are single use: each refresh spends the old one and returns a new pair, and the old access token stops working at once, because its secret no longer opens the copy. Following the OAuth security best current practice (RFC 9700), a refresh token presented a second time is treated as stolen: the server refuses it and deletes the holder's copy, and the assistant must be connected again.
@@ -251,13 +251,13 @@ A script or REST client that cannot run OAuth uses a personal access token inste
 
 **In plain words.** You say yes, this assistant may help me. The service then makes the assistant its own lockbox with a fresh password, and gives that password only to the assistant. You get an email, so you know it happened.
 
-**Why this design.** Consent happens inside a session that already holds the key, so making the new copy needs nothing more from the person. Each assistant can be cut off on its own. PKCE and the exact redirect match stop a stolen authorization code from being used anywhere else. The email notice turns a silent new holder into a visible one.
+**Why this design.** Consent happens inside a session that already holds the key, so making the new copy needs nothing more from the person. Each assistant can be cut off on its own. PKCE and the exact redirect match stop a stolen authorization code from being used anywhere else. The resource indicator binds each token to this server, so a token that leaks to another service is refused there. The email notice turns a silent new holder into a visible one.
 
 **Where it's weak.**
 
 - Anyone who can click Approve in the person's signed-in browser can add an assistant, so a hijacked session becomes a new key holder. The email notice is the safety net, and it works only if the person reads it.
 - The refresh token carries the secret, so a leaked refresh token opens the copy until it is spent or the holder is removed.
-- Dynamic registration lets any client choose its own name, so the name on the consent page is a claim, not a proof. The redirect address is the more reliable thing to show.
+- A client's name is a claim, not a proof. A client ID metadata document ties the client to a web address the server fetches itself, which is better evidence than a name chosen at dynamic registration, but neither shows who runs the client. The consent page should show the client ID address and the redirect address, not only the name.
 - For the few minutes between consent and the token exchange, the authorization code and its row together open the account key.
 
 ### 5.4 An AI assistant asks
@@ -529,7 +529,7 @@ For each credential: where it is born, where it is kept, how it moves, how it is
 - **Born:** the authorization code at consent. The access and refresh tokens at the token exchange, together with the assistant's secret and copy.
 - **Kept:** by the assistant's client. The server keeps hashes.
 - **Moves:** the access token as a bearer header on MCP calls only. The refresh token to the token endpoint only.
-- **Used:** the access token opens the assistant's copy for one MCP call, within its scopes.
+- **Used:** the access token opens the assistant's copy for one MCP call, within its scopes. The server accepts only tokens issued for it (RFC 8707).
 - **Rotates:** each refresh spends the refresh token, re-wraps the copy under a new secret, and returns a new pair.
 - **Retired:** the access token at expiry. Both when the person disconnects the assistant, at account deletion, or when a spent refresh token is presented again.
 
@@ -654,11 +654,11 @@ What this design does not promise.
 
 We looked for open standards that say how an AI assistant's access to a person's data should be tied to keys held per holder. No finalized open standard for per-holder key custody for AI access was found as of November 2026. The nearest work is below. Each link was checked on 11 November 2026.
 
-- **IETF Internet-Draft "Ciphertext-Based AI Inference Tool Design for the Model Context Protocol (MCP)"**, draft-li-pearg-ciphertext-inference-tool-mcp-00, published 29 June 2026. It proposes an MCP extension that uses homomorphic encryption, so that a tool computes on encrypted inputs and returns a result only the client can decrypt. It is an individual draft with no formal standing in the IETF, and no working group or research group has adopted it. It keeps data encrypted while the tool computes. This design instead decrypts in server memory for one request (section 10). <https://datatracker.ietf.org/doc/html/draft-li-pearg-ciphertext-inference-tool-mcp-00>
-- **OpenID Foundation, Artificial Intelligence Identity Management Community Group.** It assesses use cases, terminology and gaps in identity standards for AI agents, such as how an agent asserts its identity to the servers it calls. Its charter leaves protocol development to working groups. <https://openid.net/cg/artificial-intelligence-identity-management-community-group/>
-- **OpenID Foundation, AuthZEN Working Group.** On 15 June 2026 it approved two working group drafts that build on the AuthZEN Authorization API: the Access Request and Approval Profile, for decisions that need a prerequisite such as approval or consent before they can be made, and a profile for authorizing MCP tool calls. <https://openid.net/openid-foundation-advances-authorization-for-the-agent-era-with-new-authzen-working-group-drafts/>
-- **W3C Agent Identity Registry Protocol Community Group.** It develops open specifications for verifiable AI agent identity: a DID method, an agent credential format based on W3C Verifiable Credentials, a trust negotiation protocol, and integration profiles for MCP and OAuth. Community group reports are not W3C standards. <https://www.w3.org/groups/cg/agent-identity/>
-- **The MCP authorization specification**, revision 2026-07-28. It makes an MCP server an OAuth 2.1 resource server and asks for protected resource metadata (RFC 9728), authorization server metadata (RFC 8414), resource indicators (RFC 8707) and client ID metadata documents. It keeps dynamic client registration (RFC 7591) only for backward compatibility. Section 5.3 follows it. <https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization>
+- **IETF Internet-Draft "Ciphertext-Based AI Inference Tool Design for the Model Context Protocol (MCP)"**, draft-li-pearg-ciphertext-inference-tool-mcp-00, published 29 June 2026. It is an individual Informational draft, not endorsed by the IETF and not adopted by any working group or research group. It proposes inference over MCP with homomorphic encryption: the tool computes on encrypted inputs and returns a result that only the client can decrypt, because the client holds the key. That is related to this design but different. There, data stays encrypted while the tool computes. Here, the server decrypts in the memory of one request (section 10). <https://datatracker.ietf.org/doc/html/draft-li-pearg-ciphertext-inference-tool-mcp-00>
+- **OpenID Foundation, Artificial Intelligence Identity Management Community Group.** A community group whose scope excludes protocol development. It works on use cases, terminology and whitepapers about identity for AI agents, and on gaps in existing standards, such as how an agent asserts its identity to the servers it calls. <https://openid.net/cg/artificial-intelligence-identity-management-community-group/>
+- **OpenID Foundation, AuthZEN Working Group.** On 15 June 2026 it approved two working group drafts, which are not final specifications: the AuthZEN Profile for Model Context Protocol Tool Authorization (COAZ), and the Access Request and Approval Profile (AARP), for decisions that need a prerequisite such as approval or consent before they can be made. Both build on the AuthZEN Authorization API. <https://openid.net/openid-foundation-advances-authorization-for-the-agent-era-with-new-authzen-working-group-drafts/>
+- **W3C Agent Identity Registry Protocol Community Group.** A community group, not a working group. It develops open specifications for verifiable AI agent identity: a DID method, an agent credential format based on W3C Verifiable Credentials, a trust negotiation protocol, and integration profiles for MCP and OAuth. Community group reports are not W3C standards. <https://www.w3.org/groups/cg/agent-identity/>
+- **The MCP authorization specification**, revision 2026-07-28. It makes an MCP server an OAuth 2.1 (draft) resource server. It requires PKCE with the S256 method, protected resource metadata (RFC 9728), resource indicators (RFC 8707), and an exact match against registered redirect addresses, which must be HTTPS or local. It recommends client ID metadata documents, and keeps dynamic client registration (RFC 7591) as an optional fallback that it marks deprecated. It also uses authorization server metadata (RFC 8414). Section 5.3 follows it. <https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization>
 
 These address who an agent is and what it may do. This design addresses a different layer: which keys open a person's data, who holds each one, and how each is revoked.
 
@@ -673,10 +673,10 @@ These address who an agent is and what it may do. This design addresses a differ
 | X25519 | RFC 7748 |
 | HPKE | RFC 9180 |
 | RSA-OAEP | RFC 8017 |
-| OAuth 2.1 | draft-ietf-oauth-v2-1, still an Internet-Draft as of November 2026 |
+| OAuth 2.1 (draft) | draft-ietf-oauth-v2-1-17, October 2026. Still an Internet-Draft, not an RFC. |
 | PKCE | RFC 7636 |
 | Bearer tokens | RFC 6750 |
-| Dynamic client registration | RFC 7591 |
+| Dynamic client registration, as a fallback only | RFC 7591 |
 | Client ID metadata documents | draft-ietf-oauth-client-id-metadata-document |
 | Authorization server metadata | RFC 8414 |
 | Protected resource metadata | RFC 9728 |
@@ -686,4 +686,4 @@ These address who an agent is and what it may do. This design addresses a differ
 | Cookies, with HttpOnly, Secure and SameSite | RFC 6265 |
 | Build provenance | SLSA |
 | Hardware key storage | TPM 2.0 |
-| AI assistant protocol | MCP |
+| AI assistant protocol and its authorization | MCP specification, revision 2026-07-28 |

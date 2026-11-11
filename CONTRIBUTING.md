@@ -4,8 +4,8 @@ Thank you for reading the design. Every kind of comment helps, from a typo to a 
 
 ## Ways to take part
 
-- **Open an issue** on this repository for a question, a weakness you found, or a change you'd like to discuss before writing it.
-- **Open a pull request** with a change to [architecture.md](architecture.md). The rules below apply.
+- **[Open an issue](https://github.com/free-soellingeraj/holder-keyed-mirrors/issues)** for a question, a weakness you found, or a change you'd like to discuss before writing it.
+- **[Open a pull request](https://github.com/free-soellingeraj/holder-keyed-mirrors/pulls)** with a change to [architecture.md](architecture.md). The rules below apply.
 - **Comment in either online document.** The links are in [README.md](README.md).
 - **Mark up the .docx** with comments or tracked changes, and send it back to {{CONTACT}}.
 - **Use the feedback form** at {{FORM_URL}} to comment anonymously or sign up for updates. You don't need to sign in.
@@ -41,7 +41,7 @@ Then, from the repository root:
 
 It writes `build/architecture.md` (the Markdown with each diagram replaced by a PNG), the PNGs, and `build/holder-keyed-mirrors.docx`. It ends by printing how many diagrams it rendered and the size of the .docx. If a diagram fails to parse, `mmdc` names it and the build stops. Never edit files under `build/` by hand: the script deletes and rewrites that directory each time.
 
-Every push and pull request runs the same build automatically, and the .docx is attached to the run as a downloadable artifact.
+Every push and pull request runs the same build automatically, and the .docx is attached to the run as a downloadable artifact: see <https://github.com/free-soellingeraj/holder-keyed-mirrors/actions>.
 
 ## Review
 
