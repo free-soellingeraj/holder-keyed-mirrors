@@ -20,7 +20,6 @@ Every format is generated from the Markdown in this repository. If two formats d
 - **[Issues](https://github.com/free-soellingeraj/holder-keyed-mirrors/issues) and [pull requests](https://github.com/free-soellingeraj/holder-keyed-mirrors/pulls)** on this repository. [CONTRIBUTING.md](CONTRIBUTING.md) explains the rules and how to build.
 - **Comments** in either online document.
 - **Mark up the .docx** with comments or tracked changes, and send it back in [a new GitHub issue](https://github.com/free-soellingeraj/holder-keyed-mirrors/issues/new) on this repository, with the file attached.
-- **Anonymous comments, and sign-up for updates,** through the feedback form: {{FORM_URL}}. You don't need to sign in, and an email address is optional.
 
 ## Using your AI assistant to propose a change
 

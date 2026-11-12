@@ -8,7 +8,6 @@ Thank you for reading the design. Every kind of comment helps, from a typo to a 
 - **[Open a pull request](https://github.com/free-soellingeraj/holder-keyed-mirrors/pulls)** with a change to [architecture.md](architecture.md). The rules below apply.
 - **Comment in either online document.** The links are in [README.md](README.md).
 - **Mark up the .docx** with comments or tracked changes, and send it back in [a new GitHub issue](https://github.com/free-soellingeraj/holder-keyed-mirrors/issues/new) on this repository, with the file attached.
-- **Use the feedback form** at {{FORM_URL}} to comment anonymously or sign up for updates. You don't need to sign in.
 
 Comments in the documents, on the .docx and through the form are carried back into the Markdown by the maintainers, one topic at a time, as pull requests.
 
